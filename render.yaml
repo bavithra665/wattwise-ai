@@ -3,8 +3,8 @@ services:
     name: wattwise-ai
     env: python
     plan: free
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: gunicorn run:app
+    buildCommand: pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+    startCommand: gunicorn -b 0.0.0.0:$PORT run:app
     envVars:
       - key: FLASK_DEBUG
         value: "false"
