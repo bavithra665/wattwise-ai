@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <i class="fas fa-upload fa-3x text-primary mb-3"></i>
+                    <h3 class="fw-bold">Upload Energy Data</h3>
+                    <p class="text-muted">Upload your energy consumption CSV file for analysis</p>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-4">
+                        <div class="border-dashed border-2 border-primary rounded p-4 text-center" id="dropZone">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                            <h5 class="fw-bold">Drop your CSV file here</h5>
+                            <p class="text-muted mb-3">or click to browse</p>
+                            {{ form.file(class="form-control", accept=".csv") }}
+                            {% if form.file.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.file.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                        
+                        <!-- Sample Data Upload Button -->
+                        <button type="button" class="btn btn-outline-secondary btn-lg" onclick="uploadSampleData()">
+                            <i class="fas fa-database me-2"></i>Upload Sample IT Company Data
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- CSV Format Requirements -->
+                <div class="mt-5">
+                    <h5 class="fw-bold mb-3">CSV Format Requirements</h5>
+                    <div class="alert alert-info">
+                        <h6 class="fw-bold">Required Columns:</h6>
+                        <ul class="mb-0">
+                            <li><code>timestamp</code> - Date and time of energy reading (YYYY-MM-DD HH:MM:SS)</li>
+                            <li><code>energy_kwh</code> - Energy consumption in kilowatt-hours</li>
+                            <li><code>department</code> - Department or building name</li>
+                            <li><code>equipment</code> - Equipment or source type</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-light">
+                        <h6 class="fw-bold">Optional Columns:</h6>
+                        <ul class="mb-0">
+                            <li><code>building</code> - Building or facility name</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6 class="fw-bold">Sample CSV Format:</h6>
+                        <pre class="bg-light p-3 rounded"><code>timestamp,energy_kwh,department,equipment,building
+2024-01-15 09:00:00,125.50,Production,Machine-A,Factory-1
+2024-01-15 10:00:00,145.75,Production,Machine-B,Factory-1
+2024-01-15 11:00:00,89.25,HVAC,Cooling-System,Main-Office</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// File upload drag and drop
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('click', () => fileInput.click());
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('bg-primary', 'bg-opacity-10');
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('bg-primary', 'bg-opacity-10');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('bg-primary', 'bg-opacity-10');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].type === 'text/csv') {
+        fileInput.files = files;
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        const fileName = e.target.files[0].name;
+        dropZone.innerHTML = `
+            <i class="fas fa-file-csv fa-3x text-success mb-3"></i>
+            <h5 class="fw-bold">${fileName}</h5>
+            <p class="text-muted">File selected successfully</p>
+            <input type="file" name="file" id="fileInput" class="form-control" accept=".csv" required style="display: none;">
+        `;
+        
+        // Re-attach event listeners
+        const newFileInput = document.getElementById('fileInput');
+        newFileInput.files = e.target.files;
+    }
+});
+
+// Function to upload sample data
+function uploadSampleData() {
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading Sample Data...';
+    button.disabled = true;
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('input[name="csrf_token"]')?.value;
+    
+    // Create form data for proper CSRF handling
+    const formData = new FormData();
+    formData.append('csrf_token', csrfToken);
+    
+    // Fetch sample data from server
+    fetch('/upload-sample-data', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Success!</strong> ${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insert alert at the top of the card
+            const cardBody = document.querySelector('.card-body');
+            cardBody.insertBefore(alertDiv, cardBody.firstChild);
+            
+            // Redirect to dashboard after 2 seconds
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 2000);
+        } else {
+            throw new Error(data.message || 'Failed to upload sample data');
+        }
+    })
+    .catch(error => {
+        console.error('Error uploading sample data:', error);
+        
+        // Show error message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Error!</strong> ${error.message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const cardBody = document.querySelector('.card-body');
+        cardBody.insertBefore(alertDiv, cardBody.firstChild);
+    })
+    .finally(() => {
+        // Restore button state
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-primary">Settings</h2>
+        <p class="text-muted mb-0">Configure your API keys and application preferences</p>
+    </div>
+    <a href="{{ url_for('main.insights') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Insights
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-cog me-2"></i>API Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        <label for="gemini_api_key" class="form-label fw-bold">
+                            <i class="fas fa-key me-2"></i>Gemini API Key
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            {{ form.gemini_api_key(class="form-control", placeholder="Enter your Gemini API key", type="password") }}
+                        </div>
+                        <div class="form-text">
+                            Your API key is used to generate AI-powered energy recommendations. 
+                            Get your key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.
+                        </div>
+                        {% if current_user.gemini_api_key %}
+                        <div class="mt-2">
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>API Key Configured
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Settings
+                        </button>
+                        <a href="{{ url_for('main.settings', action='cancel') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="fw-bold mb-0">
+                    <i class="fas fa-info-circle me-2"></i>API Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">Gemini AI</span>
+                        {% if current_user.gemini_api_key %}
+                        <span class="badge bg-success">Connected</span>
+                        {% else %}
+                        <span class="badge bg-warning">Not Configured</span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">
+                        {% if current_user.gemini_api_key %}
+                        Your AI recommendations will be powered by Google's Gemini AI.
+                        {% else %}
+                        Configure your API key to enable AI-powered energy recommendations.
+                        {% endif %}
+                    </small>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <small>
+                        <strong>Tip:</strong> Without an API key, you'll still get smart recommendations, but they won't be AI-generated.
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-header bg-white">
+                <h6 class="fw-bold mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>Security
+                </h6>
+            </div>
+            <div class="card-body">
+                <small class="text-muted">
+                    <ul class="mb-0">
+                        <li>Your API key is encrypted and stored securely</li>
+                        <li>Only you have access to your API key</li>
+                        <li>Key is never shared with third parties</li>
+                    </ul>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

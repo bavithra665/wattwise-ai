@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-primary">Energy Dashboard</h2>
+        <p class="text-muted mb-0">Monitor your energy consumption and optimization insights</p>
+    </div>
+    <div>
+        <a href="{{ url_for('main.upload_data') }}" class="btn btn-primary">
+            <i class="fas fa-upload me-2"></i>Upload Data
+        </a>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-muted small mb-1">Total Consumption</p>
+                        <h4 class="fw-bold text-primary">{{ stats.total_consumption_kwh }} kWh</h4>
+                    </div>
+                    <div class="ms-3">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-bolt text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-muted small mb-1">Total Cost</p>
+                        <h4 class="fw-bold text-success">₹{{ stats.total_cost_inr }}</h4>
+                    </div>
+                    <div class="ms-3">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-rupee-sign text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-muted small mb-1">Anomalies Detected</p>
+                        <h4 class="fw-bold text-warning">{{ stats.anomaly_count }}</h4>
+                    </div>
+                    <div class="ms-3">
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-muted small mb-1">Data Points</p>
+                        <h4 class="fw-bold text-info">{{ stats.data_points }}</h4>
+                    </div>
+                    <div class="ms-3">
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-database text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Insights -->
+<div class="row">
+    <!-- Energy Consumption Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h5 class="fw-bold">Energy Consumption Trend</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="energyChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Insights -->
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold">Recent Insights</h5>
+                    <a href="{{ url_for('main.insights') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if insights %}
+                    {% for insight in insights[:5] %}
+                    <div class="d-flex mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                        <div class="me-3">
+                            {% if insight.severity == 'high' %}
+                                <i class="fas fa-exclamation-circle text-danger"></i>
+                            {% elif insight.severity == 'medium' %}
+                                <i class="fas fa-exclamation-triangle text-warning"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle text-info"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ insight.title }}</h6>
+                            <p class="text-muted small mb-1">{{ insight.description[:100] }}{% if insight.description|length > 100 %}...{% endif %}</p>
+                            <small class="text-muted">{{ insight.created_at.strftime('%d %b %Y') }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-lightbulb fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No insights available yet. Upload your energy data to get started.</p>
+                        <a href="{{ url_for('main.upload_data') }}" class="btn btn-primary btn-sm">Upload Data</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Energy Data -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h5 class="fw-bold">Recent Energy Data</h5>
+            </div>
+            <div class="card-body">
+                {% if energy_data %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Department</th>
+                                <th>Equipment</th>
+                                <th>Energy (kWh)</th>
+                                <th>Cost (₹)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in energy_data[:10] %}
+                            <tr>
+                                <td>{{ data.timestamp.strftime('%d %b %Y %H:%M') }}</td>
+                                <td>{{ data.department }}</td>
+                                <td>{{ data.equipment }}</td>
+                                <td>{{ "%.2f"|format(data.energy_kwh) }}</td>
+                                <td>₹{{ "%.2f"|format(data.cost_inr or 0) }}</td>
+                                <td>
+                                    {% if data.is_anomaly %}
+                                        <span class="badge bg-warning">Anomaly</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Normal</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-database fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No energy data available yet. Upload your CSV file to get started.</p>
+                        <a href="{{ url_for('main.upload_data') }}" class="btn btn-primary">Upload Energy Data</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Energy consumption chart
+const ctx = document.getElementById('energyChart').getContext('2d');
+const energyChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [{% for data in energy_data[:20] %}'{{ data.timestamp.strftime('%d %b') }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Energy Consumption (kWh)',
+            data: [{% for data in energy_data[:20] %}{{ data.energy_kwh }}{% if not loop.last %},{% endif %}{% endfor %}],
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Energy (kWh)'
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

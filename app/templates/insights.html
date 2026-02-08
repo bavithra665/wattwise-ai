@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-primary">Energy Insights</h2>
+        <p class="text-muted mb-0">AI-powered energy waste detection and optimization recommendations</p>
+    </div>
+    
+    <!-- Filters -->
+    <div class="d-flex gap-2">
+        <!-- Date Range Filter -->
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-calendar me-2"></i>
+                {% if current_start_date or current_end_date %}
+                    Custom Range
+                {% else %}
+                    Date Range
+                {% endif %}
+            </button>
+            <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 300px;">
+                <form method="GET" action="{{ url_for('main.insights') }}">
+                    <div class="mb-2">
+                        <label class="form-label small">Start Date</label>
+                        <input type="date" name="start_date" class="form-control form-control-sm" value="{{ current_start_date or '' }}">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small">End Date</label>
+                        <input type="date" name="end_date" class="form-control form-control-sm" value="{{ current_end_date or '' }}">
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-sm">Apply Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- File Filter -->
+        {% if upload_history %}
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-file me-2"></i>
+                {% if current_file_filter %}
+                    {{ current_file_filter }}
+                {% else %}
+                    All Files
+                {% endif %}
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('main.insights') }}">All Files</a></li>
+                {% for upload in upload_history %}
+                <li><a class="dropdown-item" href="{{ url_for('main.insights', file=upload.file_name) }}">
+                    Upload #{{ upload.upload_number }}: {{ upload.file_name }} ({{ upload.record_count }} records)
+                </a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Active Filters Display -->
+{% if current_start_date or current_end_date or current_file_filter %}
+<div class="alert alert-info mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <i class="fas fa-filter me-2"></i>
+            <strong>Active Filters:</strong>
+            {% if current_start_date %} From {{ current_start_date }}{% endif %}
+            {% if current_end_date %} to {{ current_end_date }}{% endif %}
+            {% if current_file_filter %} | File: {{ current_file_filter }}{% endif %}
+        </div>
+        <a href="{{ url_for('main.insights') }}" class="btn btn-sm btn-outline-secondary">Clear All</a>
+    </div>
+</div>
+{% endif %}
+
+{% if insights %}
+<div class="row">
+    {% for insight in insights %}
+    <div class="col-lg-6 col-xl-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="d-flex align-items-center mb-2">
+                            {% if insight.severity == 'high' %}
+                                <span class="badge bg-danger me-2">High Priority</span>
+                            {% elif insight.severity == 'medium' %}
+                                <span class="badge bg-warning me-2">Medium Priority</span>
+                            {% else %}
+                                <span class="badge bg-info me-2">Low Priority</span>
+                            {% endif %}
+                            
+                            {% if insight.insight_type == 'spike' %}
+                                <span class="badge bg-outline-primary ms-2">Energy Spike</span>
+                            {% elif insight.insight_type == 'high_consumption' %}
+                                <span class="badge bg-outline-success ms-2">High Consumption</span>
+                            {% else %}
+                                <span class="badge bg-outline-warning ms-2">Trend Analysis</span>
+                            {% endif %}
+                        </div>
+                        
+                        <h6 class="fw-bold mb-1">{{ insight.title }}</h6>
+                        <p class="text-muted small mb-0">{{ insight.description }}</p>
+                    </div>
+                    
+                    <!-- Potential Savings -->
+                    {% if insight.potential_savings_inr %}
+                    <div class="text-end">
+                        <small class="text-muted">Potential Savings</small>
+                        <p class="fw-bold text-success mb-0">₹{{ "%.2f"|format(insight.potential_savings_inr) }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Department & Equipment -->
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <small class="text-muted">Department</small>
+                        <p class="fw-bold mb-0">{{ insight.department }}</p>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Equipment</small>
+                        <p class="fw-bold mb-0">{{ insight.equipment }}</p>
+                    </div>
+                </div>
+                
+                <!-- Detection Date -->
+                <div class="text-center">
+                    <small class="text-muted">Detected</small>
+                    <p class="fw-bold mb-0">{{ insight.created_at.strftime('%d %b %Y') }}</p>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('main.ai_analysis', insight_id=insight.id) }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-robot me-1"></i>AI Analysis
+                    </a>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="viewDetails('{{ insight.id }}')">
+                        <i class="fas fa-eye me-1"></i>Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-lightbulb fa-4x text-muted mb-4"></i>
+    <h3 class="fw-bold mb-3">No Insights Available</h3>
+    <p class="text-muted mb-4">Upload your energy consumption data to generate insights and recommendations.</p>
+    <a href="{{ url_for('main.upload_data') }}" class="btn btn-primary btn-lg">
+        <i class="fas fa-upload me-2"></i>Upload Energy Data
+    </a>
+</div>
+{% endif %}
+
+<!-- Upload History Section -->
+{% if upload_history %}
+<div class="mt-5">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-history me-2"></i>Upload History & Progress Tracking
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Upload #</th>
+                            <th>File Name</th>
+                            <th>Upload Date</th>
+                            <th>Records</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for upload in upload_history %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary">Upload #{{ upload.upload_number }}</span>
+                            </td>
+                            <td>
+                                <i class="fas fa-file-csv text-primary me-2"></i>
+                                {{ upload.file_name }}
+                            </td>
+                            <td>{{ upload.upload_date.strftime('%d %b %Y, %I:%M %p') if upload.upload_date else 'N/A' }}</td>
+                            <td>{{ upload.record_count }}</td>
+                            <td>
+                                <span class="badge bg-success">Processed</span>
+                            </td>
+                            <td>
+                                {% if upload.upload_number == 1 %}
+                                <small class="text-muted">First Upload</small>
+                                {% else %}
+                                {% for prev_upload in upload_history %}
+                                    {% if prev_upload.upload_number == (upload.upload_number - 1) %}
+                                        <a href="{{ url_for('main.compare_uploads', upload1=prev_upload.file_name, upload2=upload.file_name) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-chart-line me-1"></i>Compare with Upload #{{ upload.upload_number - 1 }}
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Progress Comparison Section -->
+            {% if upload_history|length > 1 %}
+            <div class="mt-4">
+                <h6 class="fw-bold mb-3">
+                    <i class="fas fa-chart-line me-2"></i>Upload Progress Analysis
+                </h6>
+                <div class="row">
+                    {% for upload in upload_history[:3] %}
+                    <div class="col-md-4">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="fw-bold text-primary">Upload #{{ upload.upload_number }}</h6>
+                                <p class="small text-muted mb-1">{{ upload.file_name }}</p>
+                                <p class="fw-bold mb-0">{{ upload.record_count }} Records</p>
+                                <p class="small text-muted">{{ upload.upload_date.strftime('%d %b %Y') if upload.upload_date else 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Progress Tracking:</strong> Each upload is numbered sequentially. Compare different uploads to track your company's energy efficiency progress over time. Use the date range filter to analyze specific periods.
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Insight Details Modal -->
+<div class="modal fade" id="insightModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Insight Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="insightDetails">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewDetails(insightId) {
+    // Show loading spinner
+    document.getElementById('insightDetails').innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted mt-2">Loading insight details...</p>
+        </div>
+    `;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('insightModal'));
+    modal.show();
+    
+    // Fetch the details
+    fetch(`/api/insight/${insightId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch insight details');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            document.getElementById('insightDetails').innerHTML = formatInsightDetails(data);
+        })
+        .catch(error => {
+            console.error('Error fetching insight details:', error);
+            document.getElementById('insightDetails').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Failed to load insight details. Please try again.
+                </div>
+            `;
+        });
+}
+
+function formatInsightDetails(data) {
+    const severityBadge = {
+        'high': '<span class="badge bg-danger">High Priority</span>',
+        'medium': '<span class="badge bg-warning">Medium Priority</span>',
+        'low': '<span class="badge bg-info">Low Priority</span>'
+    };
+    
+    const typeBadge = {
+        'spike': '<span class="badge bg-outline-primary">Energy Spike</span>',
+        'high_consumption': '<span class="badge bg-outline-success">High Consumption</span>',
+        'trend': '<span class="badge bg-outline-warning">Trend Analysis</span>'
+    };
+    
+    let html = `
+        <div class="row">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center mb-3">
+                    ${severityBadge[data.severity] || ''}
+                    ${typeBadge[data.insight_type] || ''}
+                </div>
+                <h6 class="fw-bold">${data.title}</h6>
+                <p class="text-muted">${data.description}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                ${data.potential_savings_inr ? `<p class="text-success fw-bold mb-1">₹${data.potential_savings_inr.toFixed(2)}</p><small class="text-muted">Potential Savings</small>` : ''}
+            </div>
+        </div>
+    `;
+    
+    if (data.department || data.equipment) {
+        html += `
+            <div class="row mb-3">
+                ${data.department ? `<div class="col-6"><small class="text-muted">Department</small><p class="fw-bold mb-0">${data.department}</p></div>` : ''}
+                ${data.equipment ? `<div class="col-6"><small class="text-muted">Equipment</small><p class="fw-bold mb-0">${data.equipment}</p></div>` : ''}
+            </div>
+        `;
+    }
+    
+    if (data.energy_data && data.energy_data.length > 0) {
+        html += `
+            <div class="mb-3">
+                <h6 class="fw-bold mb-2">Recent Energy Data</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Energy (kWh)</th>
+                                <th>Cost (₹)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.energy_data.slice(0, 5).map(item => `
+                                <tr>
+                                    <td>${item.timestamp}</td>
+                                    <td>${item.energy_kwh.toFixed(2)}</td>
+                                    <td>₹${(item.cost_inr || 0).toFixed(2)}</td>
+                                    <td>${item.is_anomaly ? '<span class="badge bg-warning">Anomaly</span>' : '<span class="badge bg-success">Normal</span>'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (data.recommendations && data.recommendations.length > 0) {
+        html += `
+            <div class="mb-3">
+                <h6 class="fw-bold mb-2">Recommendations</h6>
+                <div class="recommendations-list">
+                    ${data.recommendations.map(rec => `
+                        <div class="alert alert-light mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <p class="mb-1">${rec.recommendation}</p>
+                                    ${rec.estimated_savings_inr ? `<small class="text-success">Potential savings: ₹${rec.estimated_savings_inr.toFixed(2)}</small>` : ''}
+                                </div>
+                                <span class="badge bg-${rec.priority === 'high' ? 'danger' : rec.priority === 'medium' ? 'warning' : 'info'}">${rec.priority}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    html += `
+        <div class="text-muted small">
+            <i class="fas fa-clock me-1"></i>
+            Detected on ${new Date(data.created_at).toLocaleString()}
+        </div>
+    `;
+    
+    return html;
+}
+</script>
+{% endblock %}

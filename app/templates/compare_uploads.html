@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-primary">Upload Comparison</h2>
+        <p class="text-muted mb-0">Compare energy consumption and insights between different uploads</p>
+    </div>
+    <a href="{{ url_for('main.insights') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Insights
+    </a>
+</div>
+
+<!-- Comparison Overview -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h6 class="fw-bold text-primary mb-3">{{ comparison.upload1.file_name }}</h6>
+                <div class="row">
+                    <div class="col-6">
+                        <small class="text-muted">Total Energy</small>
+                        <p class="fw-bold mb-0">{{ "%.2f"|format(comparison.upload1.total_energy) }} kWh</p>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Total Cost</small>
+                        <p class="fw-bold text-success mb-0">₹{{ "%.2f"|format(comparison.upload1.total_cost) }}</p>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <small class="text-muted">Records</small>
+                        <p class="fw-bold mb-0">{{ comparison.upload1.record_count }}</p>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Insights</small>
+                        <p class="fw-bold mb-0">{{ comparison.upload1.insight_count }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h6 class="fw-bold text-primary mb-3">{{ comparison.upload2.file_name }}</h6>
+                <div class="row">
+                    <div class="col-6">
+                        <small class="text-muted">Total Energy</small>
+                        <p class="fw-bold mb-0">{{ "%.2f"|format(comparison.upload2.total_energy) }} kWh</p>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Total Cost</small>
+                        <p class="fw-bold text-success mb-0">₹{{ "%.2f"|format(comparison.upload2.total_cost) }}</p>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <small class="text-muted">Records</small>
+                        <p class="fw-bold mb-0">{{ comparison.upload2.record_count }}</p>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Insights</small>
+                        <p class="fw-bold mb-0">{{ comparison.upload2.insight_count }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Differences Analysis -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white">
+        <h5 class="fw-bold mb-0">
+            <i class="fas fa-chart-line me-2"></i>Changes Analysis
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="text-center">
+                    <small class="text-muted">Energy Change</small>
+                    <p class="fw-bold mb-0 {% if comparison.differences.energy_change > 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ "%.2f"|format(comparison.differences.energy_change) }} kWh
+                    </p>
+                    <small class="{% if comparison.differences.energy_change > 0 %}text-danger{% else %}text-success{% endif %}">
+                        ({{ "%.1f"|format(comparison.differences.energy_percent) }}%)
+                    </small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <small class="text-muted">Cost Change</small>
+                    <p class="fw-bold mb-0 {% if comparison.differences.cost_change > 0 %}text-danger{% else %}text-success{% endif %}">
+                        ₹{{ "%.2f"|format(comparison.differences.cost_change) }}
+                    </p>
+                    <small class="{% if comparison.differences.cost_change > 0 %}text-danger{% else %}text-success{% endif %}">
+                        ({{ "%.1f"|format(comparison.differences.cost_percent) }}%)
+                    </small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <small class="text-muted">Insight Change</small>
+                    <p class="fw-bold mb-0 {% if comparison.differences.insight_change > 0 %}text-warning{% else %}text-info{% endif %}">
+                        {{ comparison.differences.insight_change }} insights
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle me-2"></i>
+            {% if comparison.differences.energy_change > 0 %}
+                <strong>Energy consumption increased</strong> by {{ "%.1f"|format(comparison.differences.energy_percent) }}% compared to the previous upload.
+            {% else %}
+                {% set energy_decrease = comparison.differences.energy_percent * -1 %}
+                <strong>Energy consumption decreased</strong> by {{ "%.1f"|format(energy_decrease) }}% compared to the previous upload.
+            {% endif %}
+            {% if comparison.differences.cost_change > 0 %}
+                This represents an additional cost of ₹{{ "%.2f"|format(comparison.differences.cost_change) }}.
+            {% else %}
+                {% set cost_savings = comparison.differences.cost_change * -1 %}
+                This represents cost savings of ₹{{ "%.2f"|format(cost_savings) }}.
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Insights Comparison -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="fw-bold mb-0">{{ comparison.upload1.file_name }} - Insights</h6>
+                <small class="text-muted">({{ comparison.upload1.insight_count }} insights)</small>
+            </div>
+            <div class="card-body">
+                {% if comparison.upload1.insights %}
+                    {% for insight in comparison.upload1.insights %}
+                    <div class="border rounded p-3 mb-2 bg-light">
+                        <small class="text-muted">{{ insight.insight_type.replace('_', ' ').title() }}</small>
+                        <p class="fw-bold mb-1">{{ insight.title }}</p>
+                        <small class="text-muted">{{ insight.description[:100] }}{% if insight.description|length > 100 %}...{% endif %}</small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No insights found for this upload.</p>
+                    <p class="text-muted">Debug: insight_count = {{ comparison.upload1.insight_count }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="fw-bold mb-0">{{ comparison.upload2.file_name }} - Insights</h6>
+                <small class="text-muted">({{ comparison.upload2.insight_count }} insights)</small>
+            </div>
+            <div class="card-body">
+                {% if comparison.upload2.insights %}
+                    {% for insight in comparison.upload2.insights %}
+                    <div class="border rounded p-3 mb-2 bg-light">
+                        <small class="text-muted">{{ insight.insight_type.replace('_', ' ').title() }}</small>
+                        <p class="fw-bold mb-1">{{ insight.title }}</p>
+                        <small class="text-muted">{{ insight.description[:100] }}{% if insight.description|length > 100 %}...{% endif %}</small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No insights found for this upload.</p>
+                    <p class="text-muted">Debug: insight_count = {{ comparison.upload2.insight_count }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

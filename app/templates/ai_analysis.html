@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-primary">AI Energy Analysis</h2>
+        <p class="text-muted mb-0">Professional energy optimization recommendations</p>
+    </div>
+    <div>
+        <a href="{{ url_for('main.insights') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Insights
+        </a>
+    </div>
+</div>
+
+<!-- Insight Summary -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center mb-3">
+                    {% if insight.severity == 'high' %}
+                    <span class="badge bg-danger me-2">High Priority</span>
+                    {% elif insight.severity == 'medium' %}
+                    <span class="badge bg-warning me-2">Medium Priority</span>
+                    {% else %}
+                    <span class="badge bg-info me-2">Low Priority</span>
+                    {% endif %}
+
+                    {% if insight.insight_type == 'spike' %}
+                    <span class="badge bg-outline-primary">Energy Spike</span>
+                    {% elif insight.insight_type == 'high_consumption' %}
+                    <span class="badge bg-outline-success">High Consumption</span>
+                    {% else %}
+                    <span class="badge bg-outline-warning">Trend Analysis</span>
+                    {% endif %}
+                </div>
+
+                <h4 class="fw-bold mb-3">{{ insight.title }}</h4>
+                <p class="text-muted">{{ insight.description }}</p>
+
+                <div class="row mt-4">
+                    {% if insight.department %}
+                    <div class="col-md-4">
+                        <small class="text-muted">Department</small>
+                        <p class="fw-bold mb-0">{{ insight.department }}</p>
+                    </div>
+                    {% endif %}
+                    {% if insight.equipment %}
+                    <div class="col-md-4">
+                        <small class="text-muted">Equipment</small>
+                        <p class="fw-bold mb-0">{{ insight.equipment }}</p>
+                    </div>
+                    {% endif %}
+                    {% if insight.potential_savings_inr %}
+                    <div class="col-md-4">
+                        <small class="text-muted">Potential Savings</small>
+                        <p class="fw-bold text-success mb-0">₹{{ "%.2f"|format(insight.potential_savings_inr) }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="bg-light rounded p-4 text-center">
+                    <i class="fas fa-robot fa-3x text-primary mb-3"></i>
+                    <h6 class="fw-bold">AI Analysis</h6>
+                    {% if analysis.source == 'gemini' %}
+                    <p class="text-success small"><i class="fas fa-check-circle me-1"></i>Powered by Google Gemini</p>
+                    {% else %}
+                    <p class="text-muted small">Based on Expert Rules</p>
+                    <small class="text-muted d-block mt-1">
+                        {% if analysis.error %}
+                        <span class="text-danger" title="{{ analysis.error }}"><i
+                                class="fas fa-exclamation-triangle me-1"></i>Please Check API Key</span>
+                        {% else %}
+                        Add Gemini API Key in settings for enhanced analysis
+                        {% endif %}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Analysis Report -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 pt-4 pb-0">
+        <h5 class="fw-bold">
+            <i class="fas fa-chart-line me-2"></i>Energy Analysis Report
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="analysis-content">
+            {% if analysis and (analysis.root_cause or analysis.analysis) %}
+            {% if analysis.root_cause %}
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <div class="p-4 border rounded bg-white h-100 shadow-sm">
+                        <h6 class="fw-bold text-danger mb-3 border-bottom pb-2">
+                            <i class="fas fa-search me-2"></i>Root Cause Analysis
+                        </h6>
+                        <div class="text-muted">
+                            {{ analysis.root_cause | safe }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-4 border rounded bg-white h-100 shadow-sm">
+                        <h6 class="fw-bold text-primary mb-3 border-bottom pb-2">
+                            <i class="fas fa-chart-pie me-2"></i>Business Impact
+                        </h6>
+                        <div class="text-muted">
+                            {{ analysis.business_impact | safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="content-section mb-4">
+                {{ analysis.analysis | nl2br | safe }}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Analyzing...</span>
+                </div>
+                <p class="text-muted mt-3">AI is analyzing your energy data...</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Recommendations -->
+{% if analysis and analysis.recommendations %}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 pt-4 pb-0">
+        <h5 class="fw-bold">
+            <i class="fas fa-lightbulb me-2"></i>Actionable Recommendations
+        </h5>
+    </div>
+    <div class="card-body">
+        {% for rec in analysis.recommendations %}
+        <div
+            class="recommendation-item mb-4 p-3 border rounded {% if rec.priority == 'high' %}border-danger{% elif rec.priority == 'medium' %}border-warning{% else %}border-info{% endif %}">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-2">
+                        {% if rec.priority == 'high' %}
+                        <span class="badge bg-danger me-2">High Priority</span>
+                        {% elif rec.priority == 'medium' %}
+                        <span class="badge bg-warning me-2">Medium Priority</span>
+                        {% else %}
+                        <span class="badge bg-info me-2">Low Priority</span>
+                        {% endif %}
+
+                        {% if rec.difficulty == 'low' %}
+                        <span class="badge bg-success me-2">Easy to Implement</span>
+                        {% elif rec.difficulty == 'medium' %}
+                        <span class="badge bg-warning me-2">Moderate Effort</span>
+                        {% else %}
+                        <span class="badge bg-danger me-2">Requires Planning</span>
+                        {% endif %}
+                    </div>
+
+                    <h6 class="fw-bold mb-2">{{ rec.text }}</h6>
+
+                    {% if rec.estimated_savings %}
+                    <div class="d-flex align-items-center text-success">
+                        <i class="fas fa-piggy-bank me-2"></i>
+                        <span class="fw-bold">Estimated Savings: ₹{{ "%.2f"|format(rec.estimated_savings) }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Implementation Timeline -->
+{% if analysis and analysis.timeline %}
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-white border-0 pt-4 pb-0">
+        <h5 class="fw-bold">
+            <i class="fas fa-calendar-alt me-2"></i>Implementation Timeline
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="timeline-item">
+                    <div class="timeline-marker bg-success"></div>
+                    <h6 class="fw-bold text-success">Quick Wins</h6>
+                    <p class="text-muted small">Implement within 1-2 weeks</p>
+                    <ul class="small">
+                        {% for item in analysis.timeline.quick_wins %}
+                        <li>{{ item }}</li>
+                        {% else %}
+                        <li>No specific quick wins identified.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="timeline-item">
+                    <div class="timeline-marker bg-warning"></div>
+                    <h6 class="fw-bold text-warning">Medium Term</h6>
+                    <p class="text-muted small">Implement within 1-3 months</p>
+                    <ul class="small">
+                        {% for item in analysis.timeline.medium_term %}
+                        <li>{{ item }}</li>
+                        {% else %}
+                        <li>No specific medium term actions identified.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="timeline-item">
+                    <div class="timeline-marker bg-primary"></div>
+                    <h6 class="fw-bold text-primary">Long Term</h6>
+                    <p class="text-muted small">Implement within 3-6 months</p>
+                    <ul class="small">
+                        {% for item in analysis.timeline.long_term %}
+                        <li>{{ item }}</li>
+                        {% else %}
+                        <li>No specific long term actions identified.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-refresh AI analysis if still loading
+    document.addEventListener('DOMContentLoaded', function () {
+        const analysisContent = document.querySelector('.analysis-content');
+        if (analysisContent && analysisContent.textContent.includes('Analyzing...')) {
+            // Refresh every 3 seconds until analysis is complete
+            setTimeout(function () {
+                location.reload();
+            }, 3000);
+        }
+    });
+</script>
+
+<style>
+    .timeline-marker {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}

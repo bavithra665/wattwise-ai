@@ -1,0 +1,23 @@
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Databases
+*.db
+
+# Uploads & generated data
+uploads/
+instance/
+
+# Frontend build (if any)
+node_modules/
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+frontend/

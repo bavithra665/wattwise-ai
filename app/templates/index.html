@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-center py-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="display-4 fw-bold text-primary mb-4">
+                <i class="fas fa-bolt text-warning me-3"></i>
+                WattWise AI
+            </h1>
+            <p class="lead text-muted mb-4">
+                AI-Powered Energy Waste Detection and Optimization System for Indian Industries
+            </p>
+            <p class="text-muted mb-5">
+                Upload your energy consumption data and receive intelligent insights to reduce costs and improve sustainability.
+            </p>
+            
+            <div class="d-flex justify-content-center gap-3">
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-lg px-4">
+                    <i class="fas fa-tachometer-alt me-2"></i> Go to Dashboard
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4">
+                    <i class="fas fa-rocket me-2"></i> Get Started
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg px-4">
+                    <i class="fas fa-sign-in-alt me-2"></i> Sign In
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section mb-5">
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-upload fa-2x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Easy Data Upload</h5>
+                    <p class="card-text text-muted">
+                        Simply upload your energy consumption CSV files. Our system automatically validates and processes your data.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-chart-line fa-2x text-success"></i>
+                    </div>
+                    <h5 class="card-title">Smart Analytics</h5>
+                    <p class="card-text text-muted">
+                        Advanced statistical analysis detects energy spikes, trends, and high-consumption areas automatically.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-robot fa-2x text-warning"></i>
+                    </div>
+                    <h5 class="card-title">AI Recommendations</h5>
+                    <p class="card-text text-muted">
+                        Get actionable insights from our AI consultant to reduce energy waste and optimize consumption.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-it-works mb-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-primary">How It Works</h2>
+        <p class="text-muted">Simple 4-step process to optimize your energy consumption</p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="text-center">
+                <div class="step-number bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
+                    <span class="fw-bold">1</span>
+                </div>
+                <h6 class="fw-bold">Upload Data</h6>
+                <p class="text-muted small">Upload your energy consumption CSV file with timestamp and usage data.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="text-center">
+                <div class="step-number bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
+                    <span class="fw-bold">2</span>
+                </div>
+                <h6 class="fw-bold">Analysis</h6>
+                <p class="text-muted small">Our system analyzes patterns and detects anomalies automatically.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="text-center">
+                <div class="step-number bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
+                    <span class="fw-bold">3</span>
+                </div>
+                <h6 class="fw-bold">Insights</h6>
+                <p class="text-muted small">View detailed insights about energy spikes and consumption patterns.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="text-center">
+                <div class="step-number bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
+                    <span class="fw-bold">4</span>
+                </div>
+                <h6 class="fw-bold">AI Recommendations</h6>
+                <p class="text-muted small">Get actionable recommendations to reduce energy waste and costs.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trust Indicators -->
+<section class="trust-section bg-light rounded p-4 mb-5">
+    <div class="row text-center">
+        <div class="col-md-3 mb-3 mb-md-0">
+            <div class="trust-item">
+                <h4 class="text-primary fw-bold">₹8.50/kWh</h4>
+                <p class="text-muted small mb-0">Average Industrial Rate</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3 mb-md-0">
+            <div class="trust-item">
+                <h4 class="text-success fw-bold">30%</h4>
+                <p class="text-muted small mb-0">Potential Savings</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3 mb-md-0">
+            <div class="trust-item">
+                <h4 class="text-warning fw-bold">24/7</h4>
+                <p class="text-muted small mb-0">Monitoring</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3 mb-md-0">
+            <div class="trust-item">
+                <h4 class="text-info fw-bold">AI-Powered</h4>
+                <p class="text-muted small mb-0">Smart Analysis</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
