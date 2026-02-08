@@ -17,7 +17,8 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_FOLDER'] = 'uploads'
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-    app.config['DEBUG'] = True  # Enable debug mode
+    # app.config['DEBUG'] = True  # Enable debug mode - REMOVED for production safety
+    app.config['DEBUG'] = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     
     # Initialize extensions
     db.init_app(app)
