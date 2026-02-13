@@ -84,16 +84,28 @@ def create_app():
     # Create database tables
     with app.app_context():
         try:
-            logger.info("🔧 Creating database tables...")
+            logger.info("🔧 Checking database schema...")
             db.create_all()
+            
+            # AUTOMATIC MIGRATION: Fix password_hash column size
+            # This is safe to run multiple times on PostgreSQL
+            if 'postgresql' in str(db.engine.url).lower():
+                try:
+                    from sqlalchemy import text
+                    db.session.execute(text('ALTER TABLE "user" ALTER COLUMN password_hash TYPE VARCHAR(256);'))
+                    db.session.commit()
+                    logger.info("✅ Database migration: password_hash column ensured to be 256 chars")
+                except Exception as mig_err:
+                    logger.warning(f"⚠️ Auto-migration skipped/failed: {str(mig_err)}")
+                    db.session.rollback()
             
             # Verify tables were created
             from sqlalchemy import inspect
             inspector = inspect(db.engine)
             tables = inspector.get_table_names()
-            logger.info(f"✅ Database tables created: {', '.join(tables)}")
+            logger.info(f"✅ Database tables verified: {', '.join(tables)}")
         except Exception as e:
-            logger.error(f"❌ Error creating database tables: {str(e)}")
+            logger.error(f"❌ Error during database initialization: {str(e)}")
             logger.error("⚠️ Application will continue, but database operations may fail")
     
     logger.info("🎉 WattWise AI initialized successfully")
